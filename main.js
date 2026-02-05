@@ -63,21 +63,22 @@ const DATA_SIFAT_PASARAN = {
 };
 
 const DATA_SIFAT_HARI = {
-    'Minggu': 'Tekun, mandiri dan berwibawa.',
-    'Senin': 'Selalu berubah, indah dan selalu mendapatkan simpati.',
-    'Selasa': 'Pemarah dan pencemburu serta luas pergaulannya.',
-    'Rabu': 'Pendiam, pemomong dan penyabar.',
-    'Kamis': 'Sangar menakutkan.',
-    'Jumat': 'Energik dan mengagumkan.',
-    'Sabtu': 'Membuat orang merasa senang dan susah ditebak.'
+    'Minggu': 'Ceria, percaya diri, tekun, mandiri, dan berwibawa. Berjiwa pemimpin, optimis, namun kadang suka ingin diperhatikan.',
+    'Senin': 'Halus, sabar, perasa, indah pembawaannya, dan mudah mendapat simpati. Setia dan pemaaf, tetapi mudah bimbang dan sensitif.',
+    'Selasa': 'Berani, tegas, pekerja keras, luas pergaulannya. Berwatak keras, mudah marah, dan memiliki rasa cemburu tinggi.',
+    'Rabu': 'Cerdas, pendiam, komunikatif, pemomong, dan penyabar. Pandai menyesuaikan diri, namun terkadang plin-plan.',
+    'Kamis': 'Bijaksana, berwibawa, religius, dan berpengaruh. Terlihat sangar atau menakutkan, tetapi berhati baik dan berpikir dalam.',
+    'Jumat': 'Ramah, energik, penuh empati, dan mengagumkan. Mudah disukai dan membawa rezeki, namun kurang tegas.',
+    'Sabtu': 'Kuat, tangguh, bertanggung jawab, dan membuat orang merasa nyaman. Sulit ditebak, keras kepala, tetapi dapat diandalkan.'
 };
 
 const NASIB_AHLI_WARIS = { 
-    1: { nama: "Gunung", arti: "Kehidupan yang mulia bagi ahli waris." },
-    2: { nama: "Guntur", arti: "Ahli waris akan mendapatkan kesulitan." },
-    3: { nama: "Segoro", arti: "Kemudahan dalam mencari rezeki." },
-    0: { nama: "Asat", arti: "Kesulitan dalam mendapatkan rezeki." }
+    1: { nama: "Gunung", arti: "kejadian dan urutan ini dalam neptu kematian menurut primbon memiliki makna bahwa kematian seseorang yang neptunya jatuh pada kategori Gunung maka artinya kelak ahli waris yang ditinggalkan akan mendapatkan kehidupan yang mulia." },
+    2: { nama: "Guntur", arti: "kejadian dan urutan ini dalam neptu kematian menurut primbon memiliki makna bahwa kematian seseorang yang neptunya jatuh pada kategori ini berarti orang yang ditinggalkan atau ahli waris akan mendapat kesulitan." },
+    3: { nama: "Segoro", arti: "kejadian dan urutan ini dalam neptu kematian menurut primbon memiliki makna bahwa kematian seseorang yang neptunya jatuh pada kategori ini berarti orang yang ditinggalkan akan menghadapi situasi dimudahkannya mencari penghasilan atau rezeki." },
+    0: { nama: "Asat", arti: "kejadian dan urutan ini dalam neptu kematian menurut primbon memiliki makna bahwa kematian seseorang yang neptunya jatuh pada kategori ini berarti ahli waris yang ditinggalkan tidak akan berkecukupan rezekinya." }
 };
+
 
 const PEMBAGI_5 = {
     1: { 
@@ -864,6 +865,7 @@ async function getRamalanShioHarian(date) {
             shio: shioName,
             elemen: shioData.elemen,
             elemenHarian: elemenHarian,
+            kecocokan: shioData.kecocokan,
             ramalan: {
                 // Mengambil salah satu kalimat dari array secara acak tapi tetap (berdasarkan tanggal)
                 karier: selectIndex(shioData.kategori.karier),
@@ -1223,9 +1225,15 @@ async function updateDetail(date, pasaran) {
                                 <p style="margin:5px 0; font-size:0.9rem;"><strong>Elemen Harian:</strong> ${ramalanShio.elemenHarian}</p>
                             </div>
                             <div>
-                                <p style="margin:5px 0; font-size:0.9rem;"><strong>Warna Keberuntungan:</strong> ${ramalanShio.ramalan.hoki.warna.join(', ')}</p>
-                                <p style="margin:5px 0; font-size:0.9rem;"><strong>Angka Hoki:</strong> ${ramalanShio.ramalan.hoki.angka.join(', ')}</p>
-                            </div>
+ <p style="margin:5px 0; font-size:0.9rem;">
+    <strong>Angka Hoki:</strong> ${ramalanShio.ramalan.hoki.angka.join(', ')}
+</p>
+
+<p style="margin:5px 0; font-size:0.9rem; border-top: 1px dotted rgba(255,255,255,0.3); padding-top: 5px;">
+    <strong>Kecocokan Shio:</strong> ${ramalanShio.kecocokan ? ramalanShio.kecocokan.join(', ') : '-'}
+</p>
+</div>
+
                         </div>
                         
                         <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:6px; margin-top:10px;">
@@ -1556,3 +1564,85 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log('   • Pencarian tanggal');
     console.log('   • Semua perhitungan Neptu dan Primbon');
 });
+
+// --- KODE BARU UNTUK RAMALAN SHIO ---
+
+function getDailySeed(date) {
+    const d = new Date(date);
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
+async function getRamalanShioHarian(date) {
+    try {
+        const seed = getDailySeed(date);
+        const lunarData = getLunarShio(date); // Fungsi ini harus ada di file logic shio Anda
+        const shioName = lunarData.shio;
+
+        if (typeof RAMALAN_SHIO === 'undefined') {
+            throw new Error("Data ramalan-shio.js belum dimuat");
+        }
+
+        const shioData = RAMALAN_SHIO.shio.find(s => s.nama === shioName);
+        if (!shioData) return null;
+
+        const selectIndex = (arr) => arr[seed % arr.length];
+        const elemenHarian = RAMALAN_SHIO.siklusElemenHarian[seed % RAMALAN_SHIO.siklusElemenHarian.length];
+
+        return {
+            shio: shioName,
+            elemen: shioData.elemen,
+            elemenHarian: elemenHarian,
+            kecocokan: shioData.kecocokan, 
+            ramalan: {
+                karier: selectIndex(shioData.kategori.karier),
+                keuangan: selectIndex(shioData.kategori.keuangan),
+                asmara: selectIndex(shioData.kategori.asmara),
+                kesehatan: selectIndex(shioData.kategori.kesehatan),
+                hoki: shioData.kategori.hoki,
+                tips: shioData.kategori.tips
+            }
+        };
+    } catch (error) {
+        console.error("Error Shio:", error);
+        return null;
+    }
+}
+
+// Ini adalah fungsi update UI yang Anda cari tadi
+function updateShioUI(data) {
+    if(!data) return;
+
+    // Menampilkan data ke elemen HTML
+    if(document.getElementById('shio-harian-title')) {
+        document.getElementById('shio-harian-title').innerText = `Ramalan Shio ${data.shio} Hari Ini`;
+    }
+    
+    // Update data teks (Pastikan ID ini ada di HTML Anda)
+    const ids = {
+        'shio-elemen-text': data.elemen,
+        'elemen-harian-text': data.elemenHarian,
+        'ramalan-karier-text': data.ramalan.karier,
+        'ramalan-keuangan-text': data.ramalan.keuangan,
+        'ramalan-asmara-text': data.ramalan.asmara,
+        'ramalan-kesehatan-text': data.ramalan.kesehatan,
+        'tips-harian-text': data.ramalan.tips
+    };
+
+    for (const [id, value] of Object.entries(ids)) {
+        const el = document.getElementById(id);
+        if(el) el.innerText = value;
+    }
+
+    // Menampilkan Kecocokan Shio secara otomatis
+    const hokiContainer = document.querySelector('.shio-hoki-info');
+    if (hokiContainer && data.kecocokan) {
+        let cocokElem = document.getElementById('shio-cocok-row');
+        if (!cocokElem) {
+            cocokElem = document.createElement('p');
+            cocokElem.id = 'shio-cocok-row';
+            cocokElem.style.marginTop = "8px"; 
+            hokiContainer.appendChild(cocokElem);
+        }
+        cocokElem.innerHTML = `<strong>Kecocokan Shio:</strong> ${data.kecocokan.join(", ")}`;
+    }
+}
