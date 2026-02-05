@@ -832,80 +832,56 @@ async function getWukuDescription(wukuName) {
 // FUNGSI RAMALAN SHIO HARIAN
 // ==========================================
 
+// 1. Fungsi untuk menghasilkan angka unik berdasarkan tanggal (Seed)
+function getDailySeed(date) {
+    const d = new Date(date);
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
 async function getRamalanShioHarian(date) {
     try {
-        // Get shio from date
+        const seed = getDailySeed(date);
         const lunarData = getLunarShio(date);
         const shioName = lunarData.shio;
-        
-        // Check if RAMALAN_SHIO is loaded
+
+        // Pastikan variabel RAMALAN_SHIO (dari file ramalan-shio.js) sudah ada
         if (typeof RAMALAN_SHIO === 'undefined') {
-            // Fallback basic shio info
-            return {
-                shio: shioName,
-                elemen: getShioElement(shioName),
-                elemenHarian: getRandomElement(),
-                ramalan: {
-                    karier: "Fokus pada pekerjaan utama hari ini.",
-                    keuangan: "Kelola keuangan dengan bijaksana.",
-                    asmara: "Komunikasi terbuka membawa keharmonisan.",
-                    kesehatan: "Jaga pola makan dan istirahat cukup.",
-                    umum: `Hari ini membawa energi positif untuk shio ${shioName}.`,
-                    hoki: { warna: ["Merah", "Emas"], angka: [7, 8] },
-                    tips: "Percayalah pada intuisi Anda hari ini."
-                }
-            };
+            throw new Error("Data ramalan-shio.js belum dimuat");
         }
+
+        // Cari data shio yang sesuai di dalam file JS Anda
+        const shioData = RAMALAN_SHIO.shio.find(s => s.nama === shioName);
         
-        // Get daily shio ramalan
-        const ramalan = RAMALAN_SHIO.getRamalanHarian(shioName);
-        const elemenHarian = RAMALAN_SHIO.getElemenHarian();
-        
+        if (!shioData) return getFallbackRamalanShio();
+
+        // 2. LOGIKA PEMILIHAN HARIAN (Index Selector)
+        // Kita gunakan modulo (%) agar index tidak melebihi jumlah array yang ada
+        const selectIndex = (arr) => arr[seed % arr.length];
+
+        const elemenHarian = RAMALAN_SHIO.siklusElemenHarian[seed % RAMALAN_SHIO.siklusElemenHarian.length];
+
         return {
             shio: shioName,
-            elemen: ramalan.elemen,
+            elemen: shioData.elemen,
             elemenHarian: elemenHarian,
-            ramalan: ramalan.kategori
+            ramalan: {
+                // Mengambil salah satu kalimat dari array secara acak tapi tetap (berdasarkan tanggal)
+                karier: selectIndex(shioData.kategori.karier),
+                keuangan: selectIndex(shioData.kategori.keuangan),
+                asmara: selectIndex(shioData.kategori.asmara),
+                kesehatan: selectIndex(shioData.kategori.kesehatan),
+                umum: shioData.kategori.umum,
+                hoki: shioData.kategori.hoki,
+                tips: shioData.kategori.tips
+            }
         };
-        
+
     } catch (error) {
-        console.error("Error getting shio ramalan:", error);
+        console.error("Error:", error);
         return getFallbackRamalanShio();
     }
 }
 
-function getShioElement(shioName) {
-    const elements = {
-        "Tikus": "Air", "Kerbau": "Tanah", "Macan": "Kayu", "Kelinci": "Kayu",
-        "Naga": "Tanah", "Ular": "Api", "Kuda": "Api", "Kambing": "Tanah",
-        "Monyet": "Logam", "Ayam": "Logam", "Anjing": "Tanah", "Babi": "Air"
-    };
-    return elements[shioName] || "Tidak diketahui";
-}
-
-function getRandomElement() {
-    const elements = ["Kayu", "Api", "Tanah", "Logam", "Air"];
-    const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-    return elements[dayOfYear % elements.length];
-}
-
-function getFallbackRamalanShio() {
-    return {
-        shio: "Tidak diketahui",
-        elemen: "Tidak diketahui",
-        elemenHarian: "Tidak diketahui",
-        ramalan: {
-            karier: "Data ramalan sedang dimuat...",
-            keuangan: "Data ramalan sedang dimuat...",
-            asmara: "Data ramalan sedang dimuat...",
-            kesehatan: "Data ramalan sedang dimuat...",
-            umum: "Silakan refresh halaman untuk memuat ramalan shio.",
-            hoki: { warna: [], angka: [] },
-            tips: "Tunggu sebentar..."
-        }
-    };
-}
 
 // ==========================================
 // LOGIKA TOKEN
