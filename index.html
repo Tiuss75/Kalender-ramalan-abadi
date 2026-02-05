@@ -28,6 +28,7 @@
             margin: 0; 
             padding: 10px;
             min-height: 100vh;
+            position: relative;
         }
         
         #mainApp { 
@@ -222,7 +223,36 @@
     /* Memberi sedikit ketebalan agar judul kategori menonjol */
     font-weight: 600;
 }
-
+        
+        /* Tombol Scroll to Top */
+        #scrollToTopBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(211, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        #scrollToTopBtn:hover {
+            background: #b00000;
+            transform: scale(1.1);
+        }
+        
+        #scrollToTopBtn.show {
+            display: flex;
+        }
         
         /* Responsive */
         @media (max-width: 480px) {
@@ -246,6 +276,14 @@
             
             .search-section {
                 padding: 15px;
+            }
+            
+            #scrollToTopBtn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                bottom: 15px;
+                right: 15px;
             }
         }
         
@@ -315,6 +353,9 @@
     </style>
 </head>
 <body>
+
+<!-- Tombol Scroll to Top -->
+<button id="scrollToTopBtn" title="Scroll to Top (Klik 1 ke detail, Klik 2 ke header)">↑</button>
 
 <!-- Token Modal -->
 <div id="tokenModal" class="token-modal">
@@ -410,6 +451,10 @@
 <script src="ramalan-shio.js"></script>
 
 <script>
+// Variabel untuk tracking klik tombol scroll
+let scrollClickCounter = 0;
+let scrollClickTimer = null;
+
 // Simple PWA Installation
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -463,6 +508,60 @@ function validateToken() {
     }, 1000);
 }
 
+// Fungsi untuk tombol scroll to top
+function setupScrollToTopButton() {
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    
+    // Tampilkan tombol saat scroll ke bawah
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            scrollBtn.classList.add('show');
+        } else {
+            scrollBtn.classList.remove('show');
+            // Reset counter jika kembali ke atas
+            scrollClickCounter = 0;
+        }
+    });
+    
+    // Handle klik tombol dengan 2x klik logic
+    scrollBtn.addEventListener('click', function() {
+        // Reset timer sebelumnya
+        if (scrollClickTimer) {
+            clearTimeout(scrollClickTimer);
+        }
+        
+        scrollClickCounter++;
+        
+        if (scrollClickCounter === 1) {
+            // Klik pertama - scroll ke detail section
+            const detailSection = document.getElementById('detail');
+            if (detailSection && detailSection.style.display !== 'none') {
+                detailSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // Jika detail tidak terbuka, coba cari elemen dengan konten
+                const detailContainer = document.getElementById('detail');
+                if (detailContainer) {
+                    detailContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+            
+            // Set timer untuk reset counter setelah 1 detik
+            scrollClickTimer = setTimeout(() => {
+                scrollClickCounter = 0;
+            }, 1000);
+        } else if (scrollClickCounter === 2) {
+            // Klik kedua - scroll ke header
+            const headerSection = document.querySelector('.header-section');
+            if (headerSection) {
+                headerSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // Reset counter
+            scrollClickCounter = 0;
+        }
+    });
+}
+
 // Check token on load
 window.addEventListener('load', function() {
     console.log('Kalender Jawa loaded');
@@ -477,6 +576,9 @@ window.addEventListener('load', function() {
         searchInput.max = '2100-12-31';
         searchInput.min = '1900-01-01';
     }
+    
+    // Setup tombol scroll to top
+    setupScrollToTopButton();
     
     // Initialize service worker if available
     if ('serviceWorker' in navigator) {
