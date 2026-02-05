@@ -197,25 +197,32 @@
         
          /* Ramalan Shio Styles */
         .shio-ramalan-card {
-          background: linear-gradient(135deg, #4A5568 0%, #2D3748 100%);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            color: white;
-        }
-        
-        .shio-category {
-       background: linear-gradient(135deg, #718096 0%, #4A5568 100%);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        
-       .shio-category h4 {
+    /* Background utama sesuai permintaan Anda */
+    background: linear-gradient(135deg, #a3b17d 0%, #8a9a5b 100%);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    color: white;
+    /* Tambahan shadow halus agar kartu terlihat lebih modern */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.shio-category {
+    /* Dibuat sedikit lebih gelap dari background utama agar terlihat kontras */
+    background: linear-gradient(135deg, #8a9a5b 0%, #76844e 100%);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.shio-category h4 {
     margin-top: 0;
-    /* Emas pucat agar tidak terlalu menyilaukan namun tetap elegan */
-    color: #E2E8F0;
-        }
+    color: white;
+    /* Memberi sedikit ketebalan agar judul kategori menonjol */
+    font-weight: 600;
+}
+
         
         /* Responsive */
         @media (max-width: 480px) {
