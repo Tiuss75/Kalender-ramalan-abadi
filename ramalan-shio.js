@@ -1,7 +1,7 @@
 
 // ramalan-shio.js - Data shio Lengkap (12 shio)
 
-{
+const RAMALAN_SHIO = {
   "siklusElemenHarian": ["Kayu", "Api", "Tanah", "Logam", "Air"],
   "shio": [
     {
