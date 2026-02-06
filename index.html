@@ -7,15 +7,20 @@
     <meta name="keywords" content="kalender jawa, weton, primbon, kalender abadi, tanggal jawa, imlek">
     <meta name="author" content="Tius">
     
-    <!-- PWA Meta Tags (Sederhana) -->
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#D30000">
     <link rel="manifest" href="manifest.json">
     
-    <title>Kalender Abadi Jawa</title  
-
-<meta name="google-site-verification" content="
-
-rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
+    <title>Kalender Abadi Jawa</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> 
+<meta name="google-site-verification" content="rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
 
     <style>
         :root { 
@@ -199,58 +204,28 @@ rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
             border: 2px solid #F57C00 !important;
         }
         
-         /* Ramalan Shio Styles */
+        /* Ramalan Shio Styles */
         .shio-ramalan-card {
-    /* Background utama sesuai permintaan Anda */
-    background: linear-gradient(135deg, #a3b17d 0%, #8a9a5b 100%);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    color: white;
-    /* Tambahan shadow halus agar kartu terlihat lebih modern */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
+            background: linear-gradient(135deg, #a3b17d 0%, #8a9a5b 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
 
-.shio-category {
-    /* Dibuat sedikit lebih gelap dari background utama agar terlihat kontras */
-    background: linear-gradient(135deg, #8a9a5b 0%, #76844e 100%);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    color: white;
-}
+        .shio-category {
+            background: linear-gradient(135deg, #8a9a5b 0%, #76844e 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: white;
+        }
 
-.shio-category h4 {
-    margin-top: 0;
-    color: white;
-    /* Memberi sedikit ketebalan agar judul kategori menonjol */
-    font-weight: 600;
-}
-
-        
-        /* Responsive */
-        @media (max-width: 480px) {
-            #mainApp {
-                padding: 10px;
-            }
-            
-            .calendar-day {
-                min-height: 45px;
-                padding: 5px 1px;
-            }
-            
-            .date-num {
-                font-size: 1rem;
-            }
-            
-            .search-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .search-section {
-                padding: 15px;
-            }
+        .shio-category h4 {
+            margin-top: 0;
+            color: white;
+            font-weight: 600;
         }
         
         /* Token Modal Styles */
@@ -316,9 +291,121 @@ rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
             font-weight: bold;
             font-size: 14px;
         }
+        
+        /* Scroll to Top Button */
+        #scrollTopBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #D30000 0%, #9B0000 100%);
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(211, 0, 0, 0.3);
+            display: none;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        #scrollTopBtn:hover {
+            background: linear-gradient(135deg, #B00000 0%, #7A0000 100%);
+            transform: scale(1.1);
+            box-shadow: 0 6px 18px rgba(211, 0, 0, 0.4);
+        }
+        
+        #scrollTopBtn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Premium Badge */
+        .premium-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-size: 12px;
+        }
+        
+        /* Firebase Status */
+        .firebase-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .firebase-status.online {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .firebase-status.offline {
+            background: #F44336;
+            color: white;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            #mainApp {
+                padding: 10px;
+            }
+            
+            .calendar-day {
+                min-height: 45px;
+                padding: 5px 1px;
+            }
+            
+            .date-num {
+                font-size: 1rem;
+            }
+            
+            .search-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-section {
+                padding: 15px;
+            }
+            
+            #scrollTopBtn {
+                bottom: 15px;
+                right: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .firebase-status {
+                position: static;
+                margin: 10px auto;
+                display: inline-block;
+            }
+        }
     </style>
 </head>
 <body>
+
+<!-- Firebase Status Indicator -->
+<div id="firebaseStatus" class="firebase-status offline">
+    🔌 Firebase: Offline
+</div>
 
 <!-- Token Modal -->
 <div id="tokenModal" class="token-modal">
@@ -327,6 +414,15 @@ rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
         <p style="font-size: 14px; color: #666;">Masukkan token untuk akses lengkap:</p>
         <input type="text" id="tokenInput" class="token-input" placeholder="Masukkan kode token...">
         <button class="token-btn" onclick="validateToken()">Aktifkan Token</button>
+        
+        <div style="margin: 15px 0; display: flex; gap: 10px;">
+            <button onclick="checkTokenFromURL()" style="flex:1; padding:8px; background:#9C27B0; color:white; border:none; border-radius:5px; font-size:12px;">
+                🔗 Cek dari URL
+            </button>
+            <button onclick="testFirebaseConnection()" style="flex:1; padding:8px; background:#607D8B; color:white; border:none; border-radius:5px; font-size:12px;">
+                📡 Test Koneksi
+            </button>
+        </div>
         
         <p style="margin: 15px 0 5px; font-size: 12px;">Belum punya token?</p>
         <a href="https://wa.me/6285117021168?text=Halo%20admin,%20saya%20ingin%20membeli%20token%20Kalender%20Jawa" 
@@ -352,6 +448,26 @@ rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
         <h1 style="margin:0; font-size: 22px; color: var(--primary);">📅 Kalender Abadi Jawa</h1>
         <p style="margin:5px 0; font-size: 13px; color: #888;">Jawa • Masehi • Imlek • Weton Lengkap</p>
         <p id="appStatus" style="margin:5px 0; font-size: 11px; color: #25D366;"></p>
+        
+        <!-- Premium Badge -->
+        <div class="premium-badge" id="premiumBadge">
+            <i class="fas fa-crown"></i> FREE
+        </div>
+        
+        <!-- Token Access Button -->
+        <button onclick="showTokenModal()" style="
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+        ">
+            🔑 Token Premium
+        </button>
     </div>
 
     <!-- Search Section -->
@@ -389,50 +505,256 @@ rADhVWnVQtbHErE7NCZc_fmgwkGePxNzRk_a_oy3y1A" />
     <!-- Detail Section -->
     <div id="detail"></div>
   
-      <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
+    <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
         <p style="margin-bottom: 15px;">
             <a href="panduan.html" style="color: #28a745; text-decoration: none; font-weight: bold; border: 1px solid #28a745; padding: 4px 10px; border-radius: 12px;">
                 📖 Panduan Cari Hari Baik
             </a>
         </p>
-      
-
+    </div>
     
     <!-- Footer Info -->
     <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
         <p>📱 <strong>Aplikasi Kalender Jawa</strong> - Versi Lengkap</p>
         <p>⚡ <strong>Ramalan Shio Harian</strong> - Update Otomatis</p>
         <p>🔄 <strong>by Tius</strong> - © 2026</p>
+        
+      
+            </a>
+        </div>
+        
+        <!-- Firebase Info -->
+        <div id="firebaseInfo" style="margin-top: 10px; font-size: 10px; color: #666;">
+            Status: Loading...
+        </div>
     </div>
 </div>
+
+<!-- Scroll to Top Button -->
+<button id="scrollTopBtn" title="Kembali ke atas">
+    <i class="fas fa-arrow-up"></i>
+</button>
 
 <!-- Load Scripts -->
 <script src="main.js"></script>
 <script src="ramalan-shio.js"></script>
 
 <script>
-// Simple PWA Installation
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // Optional: Show install button
-    setTimeout(() => {
-        if (confirm('Ingin pasang Kalender Jawa di perangkat Anda?')) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted install');
-                }
-                deferredPrompt = null;
-            });
-        }
-    }, 10000);
-});
+// ==================== FIREBASE CONFIGURATION ====================
+// 🔥 GANTI DENGAN KONFIGURASI FIREBASE ANDA (SAMA dengan admin.html)
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCir9IhWurIN8P2LiCfb445ss-bsurrFG4",
+    authDomain: "kalender-ramalan.firebaseapp.com",
+    databaseURL: "https://kalender-ramalan-default-rtdb.firebaseio.com",
+    projectId: "kalender-ramalan",
+    storageBucket: "kalender-ramalan.firebasestorage.app",
+    messagingSenderId: "811026418437",
+    appId: "1:811026418437:web:b0efdd1eb52fd4688bc56c"
+};
 
-// Token Modal Functions
+// ==================== GLOBAL VARIABLES ====================
+let firebaseApp = null;
+let database = null;
+let isFirebaseConnected = false;
+
+// ==================== FIREBASE FUNCTIONS ====================
+function initializeFirebase() {
+    try {
+        firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+        database = firebase.database();
+        
+        // Set up connection state listener
+        const connectedRef = database.ref(".info/connected");
+        connectedRef.on("value", function(snap) {
+            isFirebaseConnected = snap.val() === true;
+            updateConnectionStatus();
+            
+            if (isFirebaseConnected) {
+                console.log("✅ Firebase connected");
+                // Sync token when connected
+                syncTokenWithFirebase();
+            } else {
+                console.log("🔌 Firebase disconnected");
+            }
+        });
+        
+        console.log("✅ Firebase initialized successfully");
+        updateFirebaseInfo("Firebase terhubung");
+        
+    } catch (error) {
+        console.error("❌ Firebase initialization error:", error);
+        updateFirebaseInfo(`Error: ${error.message}`);
+    }
+}
+
+function updateConnectionStatus() {
+    const badgeElement = document.getElementById('firebaseStatus');
+    const infoElement = document.getElementById('firebaseInfo');
+    
+    if (isFirebaseConnected) {
+        if (badgeElement) {
+            badgeElement.className = "firebase-status online";
+            badgeElement.innerHTML = "✅ Firebase: Online";
+        }
+        if (infoElement) {
+            infoElement.innerHTML = "✅ Terhubung ke server token";
+        }
+    } else {
+        if (badgeElement) {
+            badgeElement.className = "firebase-status offline";
+            badgeElement.innerHTML = "🔌 Firebase: Offline";
+        }
+        if (infoElement) {
+            infoElement.innerHTML = "⚠️ Mode offline - token lokal saja";
+        }
+    }
+}
+
+function updateFirebaseInfo(message) {
+    const infoElement = document.getElementById('firebaseInfo');
+    if (infoElement) {
+        infoElement.innerHTML = message;
+    }
+}
+
+async function testFirebaseConnection() {
+    try {
+        updateFirebaseInfo("🔄 Testing connection...");
+        
+        // Test write
+        const testRef = database.ref('testConnection');
+        await testRef.set({
+            timestamp: Date.now(),
+            test: "connection_test"
+        });
+        
+        // Test read
+        const snapshot = await testRef.once('value');
+        const data = snapshot.val();
+        
+        // Clean up
+        await testRef.remove();
+        
+        updateFirebaseInfo(`✅ Connection successful!<br>Timestamp: ${new Date(data.timestamp).toLocaleTimeString()}`);
+        alert("✅ Firebase connection test successful!");
+        
+    } catch (error) {
+        console.error("❌ Firebase test failed:", error);
+        updateFirebaseInfo(`❌ Connection failed: ${error.message}`);
+        alert("❌ Firebase connection test failed!");
+    }
+}
+
+// ==================== TOKEN VALIDATION FUNCTIONS ====================
+async function validateTokenFromFirebase(token) {
+    if (!isFirebaseConnected) {
+        console.log("🔄 Firebase offline, using local validation");
+        return validateTokenLocally(token);
+    }
+    
+    try {
+        console.log(`🔍 Validating token ${token} from Firebase...`);
+        const snapshot = await database.ref('tokens/' + token).once('value');
+        const tokenData = snapshot.val();
+        
+        if (tokenData && tokenData.status === 'active') {
+            const expiryDate = new Date(tokenData.expiry);
+            const today = new Date();
+            
+            if (today <= expiryDate) {
+                console.log("✅ Token valid from Firebase:", tokenData);
+                return { 
+                    valid: true, 
+                    data: tokenData 
+                };
+            } else {
+                console.log("❌ Token expired in Firebase");
+                return { 
+                    valid: false, 
+                    error: 'Token telah kadaluarsa' 
+                };
+            }
+        } else {
+            console.log("❌ Token not found in Firebase");
+            return { 
+                valid: false, 
+                error: 'Token tidak ditemukan di server' 
+            };
+        }
+        
+    } catch (error) {
+        console.error("❌ Error validating from Firebase:", error);
+        // Fallback to local validation
+        return validateTokenLocally(token);
+    }
+}
+
+function validateTokenLocally(token) {
+    console.log(`🔍 Validating token ${token} locally...`);
+    const adminDB = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+    const today = new Date();
+    
+    if (adminDB[token]) {
+        const tokenData = adminDB[token];
+        const expiryDate = new Date(tokenData.expiry);
+        
+        if (today <= expiryDate) {
+            console.log("✅ Token valid locally:", tokenData);
+            return { 
+                valid: true, 
+                data: tokenData 
+            };
+        } else {
+            console.log("❌ Token expired locally");
+            return { 
+                valid: false, 
+                error: 'Token telah kadaluarsa' 
+            };
+        }
+    } else {
+        console.log("❌ Token not found locally");
+        return { 
+            valid: false, 
+            error: 'Token tidak ditemukan' 
+        };
+    }
+}
+
+async function syncTokenWithFirebase() {
+    const token = localStorage.getItem('kalender_token_tius');
+    if (!token || !isFirebaseConnected) return;
+    
+    try {
+        const snapshot = await database.ref('tokens/' + token).once('value');
+        const tokenData = snapshot.val();
+        
+        if (tokenData) {
+            // Update local storage with latest data from Firebase
+            localStorage.setItem('premium_token', JSON.stringify(tokenData));
+            
+            const adminDB = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+            adminDB[token] = tokenData;
+            localStorage.setItem('kalender_token_database', JSON.stringify(adminDB));
+            
+            console.log("✅ Token synced from Firebase");
+            checkPremiumStatus();
+        }
+    } catch (error) {
+        console.error("❌ Error syncing token:", error);
+    }
+}
+
+// ==================== TOKEN MODAL FUNCTIONS ====================
 function showTokenModal() {
+    // Check if already premium
+    if (checkPremiumStatus()) {
+        const token = localStorage.getItem('kalender_token_tius');
+        const tokenData = JSON.parse(localStorage.getItem('premium_token') || '{}');
+        
+        alert(`✅ Anda sudah premium!\n\n📦 Paket: ${tokenData.package || 'Premium'}\n📅 Berlaku hingga: ${tokenData.expiry || 'Tidak diketahui'}\n\nToken: ${token}`);
+        return;
+    }
+    
     document.getElementById('tokenModal').style.display = 'flex';
     document.getElementById('tokenInput').focus();
 }
@@ -441,7 +763,7 @@ function closeTokenModal() {
     document.getElementById('tokenModal').style.display = 'none';
 }
 
-function validateToken() {
+async function validateToken() {
     const tokenInput = document.getElementById('tokenInput');
     const token = tokenInput.value.trim().toUpperCase();
     
@@ -450,24 +772,244 @@ function validateToken() {
         return;
     }
     
-    // Simpan token ke localStorage
-    localStorage.setItem('kalender_token_tius', token);
+    console.log(`🚀 Validating token: ${token}`);
     
-    // Tampilkan pesan sukses
-    alert('✅ Token berhasil disimpan!\n\nReload halaman untuk melihat detail lengkap.');
+    // Show loading
+    tokenInput.disabled = true;
+    document.querySelector('.token-btn').innerHTML = '🔄 Memvalidasi...';
     
-    closeTokenModal();
-    
-    // Refresh setelah 1 detik
-    setTimeout(() => {
-        location.reload();
-    }, 1000);
+    try {
+        // Validate from Firebase (with local fallback)
+        const result = await validateTokenFromFirebase(token);
+        
+        if (result.valid) {
+            // Save token locally
+            localStorage.setItem('kalender_token_tius', token);
+            localStorage.setItem('premium_token', JSON.stringify(result.data));
+            
+            // Also save to admin database
+            const adminDB = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+            adminDB[token] = result.data;
+            localStorage.setItem('kalender_token_database', JSON.stringify(adminDB));
+            
+            console.log("✅ Token activated:", result.data);
+            
+            // Show success message
+            alert(`✅ Token berhasil diaktifkan!\n\n📦 Paket: ${result.data.package}\n📅 Berlaku hingga: ${result.data.expiry}\n✉️ Email: ${result.data.email || '-'}\n\n${isFirebaseConnected ? '✅ Disimpan di server' : '⚠️ Mode offline'}`);
+            
+            closeTokenModal();
+            
+            // Refresh page to show premium features
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+            
+        } else {
+            alert(`❌ ${result.error}\n\n📞 Hubungi admin: 0851-1702-1168\n💬 WhatsApp: https://wa.me/6285117021168`);
+        }
+        
+    } catch (error) {
+        console.error("❌ Validation error:", error);
+        alert("❌ Error memvalidasi token. Coba lagi.");
+    } finally {
+        // Reset button
+        tokenInput.disabled = false;
+        document.querySelector('.token-btn').innerHTML = 'Aktifkan Token';
+        tokenInput.value = '';
+    }
 }
 
-// Check token on load
+// ==================== URL TOKEN FUNCTIONS ====================
+async function checkTokenFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token) {
+        console.log(`🔗 Found token in URL: ${token}`);
+        const result = await validateTokenFromFirebase(token);
+        
+        if (result.valid) {
+            // Save token
+            localStorage.setItem('kalender_token_tius', token);
+            localStorage.setItem('premium_token', JSON.stringify(result.data));
+            
+            // Update admin DB
+            const adminDB = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+            adminDB[token] = result.data;
+            localStorage.setItem('kalender_token_database', JSON.stringify(adminDB));
+            
+            // Remove token from URL
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            
+            // Show notification
+            showNotification('✅ Token dari URL berhasil diaktifkan!');
+            
+            // Refresh
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+            
+        } else {
+            alert(`❌ Token dari URL tidak valid: ${result.error}`);
+        }
+    } else {
+        alert('⚠️ Tidak ada token di URL');
+    }
+}
+
+function getTokenFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token) {
+        console.log(`🔍 Auto-checking URL token: ${token}`);
+        // Auto-validate if token exists
+        setTimeout(() => {
+            validateTokenFromFirebase(token).then(result => {
+                if (result.valid) {
+                    // Auto-activate
+                    localStorage.setItem('kalender_token_tius', token);
+                    localStorage.setItem('premium_token', JSON.stringify(result.data));
+                    
+                    const adminDB = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+                    adminDB[token] = result.data;
+                    localStorage.setItem('kalender_token_database', JSON.stringify(adminDB));
+                    
+                    // Clean URL
+                    const cleanUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                    
+                    // Show notification
+                    showNotification('✅ Token dari link otomatis diaktifkan!');
+                    
+                    // Reload after a moment
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                }
+            });
+        }, 1000);
+    }
+}
+
+// ==================== PREMIUM STATUS ====================
+function checkPremiumStatus() {
+    const token = localStorage.getItem('kalender_token_tius');
+    const today = new Date();
+    
+    if (token) {
+        const savedToken = localStorage.getItem('premium_token');
+        if (savedToken) {
+            try {
+                const tokenData = JSON.parse(savedToken);
+                const expiryDate = new Date(tokenData.expiry);
+                
+                if (today <= expiryDate) {
+                    // Update badge
+                    const badge = document.getElementById('premiumBadge');
+                    if (badge) {
+                        badge.style.display = 'inline-block';
+                        badge.innerHTML = `<i class="fas fa-crown"></i> ${tokenData.package || 'PREMIUM'}`;
+                        badge.style.background = 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
+                    }
+                    
+                    console.log("✅ Premium access active");
+                    return true;
+                } else {
+                    // Token expired
+                    console.log("❌ Token expired");
+                    localStorage.removeItem('kalender_token_tius');
+                    localStorage.removeItem('premium_token');
+                    
+                    const badge = document.getElementById('premiumBadge');
+                    if (badge) {
+                        badge.innerHTML = `<i class="fas fa-crown"></i> FREE`;
+                        badge.style.background = '#ccc';
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing token:", e);
+            }
+        }
+    }
+    
+    return false;
+}
+
+// ==================== NOTIFICATION ====================
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease;
+    `;
+    notification.innerHTML = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS for animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// ==================== SCROLL TO TOP ====================
+function initScrollToTop() {
+    const scrollBtn = document.getElementById('scrollTopBtn');
+    
+    if (!scrollBtn) return;
+    
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            scrollBtn.style.display = 'flex';
+        } else {
+            scrollBtn.style.display = 'none';
+        }
+    });
+    
+    scrollBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
+
+// ==================== INITIALIZATION ====================
 window.addEventListener('load', function() {
-    console.log('Kalender Jawa loaded');
+    console.log('🚀 Kalender Jawa loading...');
     document.getElementById('appStatus').textContent = '✅ Aplikasi siap digunakan';
+    
+    // Initialize Firebase
+    initializeFirebase();
+    
+    // Check token from URL
+    getTokenFromURL();
+    
+    // Check premium status
+    checkPremiumStatus();
     
     // Set today's date in search input
     const today = new Date();
@@ -479,21 +1021,59 @@ window.addEventListener('load', function() {
         searchInput.min = '1900-01-01';
     }
     
-    // Initialize service worker if available
+    // Initialize scroll to top button
+    initScrollToTop();
+    
+    // PWA Installation
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        setTimeout(() => {
+            if (confirm('Ingin pasang Kalender Jawa di perangkat Anda?')) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }, 10000);
+    });
+    
+    // Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker registered'))
-            .catch(err => console.log('Service Worker registration failed:', err));
+            .then(reg => console.log('✅ Service Worker registered'))
+            .catch(err => console.log('❌ Service Worker registration failed:', err));
     }
 });
 
 // Online/Offline detection
 window.addEventListener('online', () => {
     document.getElementById('appStatus').textContent = '✅ Online - Aplikasi siap';
+    console.log('✅ Back online');
+    
+    // Re-check Firebase connection
+    setTimeout(() => {
+        if (database) {
+            const connectedRef = database.ref(".info/connected");
+            connectedRef.once("value").then(snap => {
+                if (snap.val() === true) {
+                    updateConnectionStatus();
+                    syncTokenWithFirebase();
+                }
+            });
+        }
+    }, 1000);
 });
 
 window.addEventListener('offline', () => {
     document.getElementById('appStatus').textContent = '⚠️ Offline - Mode terbatas';
+    console.log('⚠️ Offline mode');
+    updateConnectionStatus();
 });
 </script>
 
