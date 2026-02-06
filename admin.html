@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Kalender Jawa</title>
+    
+    <!-- Firebase SDK -->
+ <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> 
+    
     <style>
         * {
             margin: 0;
@@ -259,6 +265,27 @@
         .stat-card.active .number { color: #4CAF50; }
         .stat-card.expired .number { color: #F44336; }
         
+        .firebase-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .firebase-status.online {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .firebase-status.offline {
+            background: #F44336;
+            color: white;
+        }
+        
         @media (max-width: 768px) {
             .admin-content {
                 padding: 20px;
@@ -267,15 +294,26 @@
             .package-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .firebase-status {
+                position: static;
+                margin-bottom: 15px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Firebase Status Indicator -->
+    <div id="firebaseStatus" class="firebase-status offline">
+        🔌 Firebase: Offline
+    </div>
+
     <div class="admin-container">
         <!-- Header -->
         <div class="admin-header">
             <h1>🛠️ Admin Panel Kalender Jawa</h1>
             <p>Kelola token akses premium untuk aplikasi Kalender Jawa</p>
+            <p id="appVersion" style="font-size: 12px; margin-top: 10px;">Firebase Version</p>
         </div>
         
         <!-- Main Content -->
@@ -294,6 +332,11 @@
             
             <!-- Main Panel (hidden until verified) -->
             <div class="section" id="mainPanel" style="display: none;">
+                <!-- Firebase Connection Status -->
+                <div style="background: #e3f2fd; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <span id="connectionStatus">🔄 Menghubungkan ke Firebase...</span>
+                </div>
+                
                 <!-- Generate Token Section -->
                 <div>
                     <h2>📦 Generate Token Baru</h2>
@@ -340,6 +383,9 @@
                         
                         <button class="btn btn-secondary" onclick="copyTokenToClipboard()">
                             📋 Salin Token
+                        </button>
+                        <button class="btn" onclick="shareTokenViaLink()" style="background: #2196F3; color: white; margin-left: 10px;">
+                            🔗 Buat Link Share
                         </button>
                         <button class="btn" onclick="printToken()" style="background: #FF9800; color: white; margin-left: 10px;">
                             🖨️ Cetak
@@ -408,16 +454,39 @@
                         Export untuk backup data token. Import untuk restore dari backup.
                     </p>
                 </div>
+                
+                <!-- Firebase Info -->
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <h3>📊 Firebase Status</h3>
+                    <div id="firebaseInfo" style="font-size: 13px; color: #666;">
+                        Menunggu koneksi...
+                    </div>
+                    <button onclick="testFirebaseConnection()" style="margin-top: 10px; padding: 8px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        Test Koneksi
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Konfigurasi Paket
+        // ==================== FIREBASE CONFIGURATION ====================
+        // 🔥 GANTI DENGAN KONFIGURASI FIREBASE ANDA
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCir9IhWurIN8P2LiCfb445ss-bsurrFG4",
+            authDomain: "kalender-ramalan.firebaseapp.com",
+            databaseURL: "https://kalender-ramalan-default-rtdb.firebaseio.com",
+            projectId: "kalender-ramalan",
+            storageBucket: "kalender-ramalan.firebasestorage.app",
+            messagingSenderId: "811026418437",
+            appId: "1:811026418437:web:b0efdd1eb52fd4688bc56c"
+        };
+
+        // ==================== APP CONFIGURATION ====================
         const PACKAGES = {
             "1bulan": {
                 name: "1 Bulan",
-                duration: 1, // bulan
+                duration: 1,
                 price: "Rp 25.000",
                 discount: "",
                 color: "#4CAF50"
@@ -445,27 +514,167 @@
             },
             "unlimited": {
                 name: "Unlimited",
-                duration: 9999, // tahun
+                duration: 9999,
                 price: "Rp 500.000",
                 discount: "Akses seumur hidup",
                 color: "#D30000"
             }
         };
 
-        // Password Admin (ganti dengan password yang lebih aman di production)
-        const ADMIN_PASSWORD = "admin123";
+        const ADMIN_PASSWORD = "admin123"; // 🔐 Ganti password ini
+        const APP_URL = "https://www.kalenderjawaabadi.my.id/"; // 🌐 Ganti dengan URL GitHub Pages Anda
 
-        // Database Token (simpan di localStorage)
+        // ==================== GLOBAL VARIABLES ====================
         let tokenDatabase = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
         let selectedPackage = null;
+        let firebaseApp = null;
+        let database = null;
+        let isFirebaseConnected = false;
 
-        // Inisialisasi
+        // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Admin Panel Loading...");
             renderPackageGrid();
+            initializeFirebase();
             loadTokenDatabase();
+            checkAdminSession();
         });
 
-        // Render Package Grid
+        // ==================== FIREBASE FUNCTIONS ====================
+        function initializeFirebase() {
+            try {
+                firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+                database = firebase.database();
+                
+                // Set up connection state listener
+                const connectedRef = database.ref(".info/connected");
+                connectedRef.on("value", function(snap) {
+                    isFirebaseConnected = snap.val() === true;
+                    updateConnectionStatus();
+                });
+                
+                console.log("✅ Firebase initialized successfully");
+                updateFirebaseInfo("Firebase terhubung");
+                
+            } catch (error) {
+                console.error("❌ Firebase initialization error:", error);
+                updateFirebaseInfo(`Error: ${error.message}`);
+            }
+        }
+
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connectionStatus');
+            const badgeElement = document.getElementById('firebaseStatus');
+            
+            if (isFirebaseConnected) {
+                if (statusElement) statusElement.innerHTML = "✅ Terhubung ke Firebase";
+                if (badgeElement) {
+                    badgeElement.className = "firebase-status online";
+                    badgeElement.innerHTML = "✅ Firebase: Online";
+                }
+            } else {
+                if (statusElement) statusElement.innerHTML = "🔌 Tidak terhubung ke Firebase (Mode Offline)";
+                if (badgeElement) {
+                    badgeElement.className = "firebase-status offline";
+                    badgeElement.innerHTML = "🔌 Firebase: Offline";
+                }
+            }
+        }
+
+        function updateFirebaseInfo(message) {
+            const infoElement = document.getElementById('firebaseInfo');
+            if (infoElement) {
+                infoElement.innerHTML = message;
+            }
+        }
+
+        async function testFirebaseConnection() {
+            try {
+                updateFirebaseInfo("🔄 Testing connection...");
+                
+                // Test write
+                const testRef = database.ref('testConnection');
+                await testRef.set({
+                    timestamp: Date.now(),
+                    test: "connection_test"
+                });
+                
+                // Test read
+                const snapshot = await testRef.once('value');
+                const data = snapshot.val();
+                
+                // Clean up
+                await testRef.remove();
+                
+                updateFirebaseInfo(`✅ Connection successful!<br>Timestamp: ${new Date(data.timestamp).toLocaleTimeString()}`);
+                alert("✅ Firebase connection test successful!");
+                
+            } catch (error) {
+                console.error("❌ Firebase test failed:", error);
+                updateFirebaseInfo(`❌ Connection failed: ${error.message}`);
+                alert("❌ Firebase connection test failed!");
+            }
+        }
+
+        // ==================== TOKEN FUNCTIONS (FIREBASE) ====================
+        async function saveTokenToFirebase(token, tokenData) {
+            if (!isFirebaseConnected) {
+                console.log("🔄 Firebase offline, saving locally only");
+                throw new Error("Firebase offline");
+            }
+            
+            try {
+                console.log(`📤 Saving token ${token} to Firebase...`);
+                await database.ref('tokens/' + token).set(tokenData);
+                console.log(`✅ Token ${token} saved to Firebase`);
+                return true;
+            } catch (error) {
+                console.error(`❌ Error saving token to Firebase:`, error);
+                throw error;
+            }
+        }
+
+        async function deleteTokenFromFirebase(token) {
+            if (!isFirebaseConnected) {
+                console.log("🔄 Firebase offline, deleting locally only");
+                return false;
+            }
+            
+            try {
+                await database.ref('tokens/' + token).remove();
+                console.log(`✅ Token ${token} deleted from Firebase`);
+                return true;
+            } catch (error) {
+                console.error(`❌ Error deleting token from Firebase:`, error);
+                return false;
+            }
+        }
+
+        async function syncWithFirebase() {
+            if (!isFirebaseConnected) {
+                console.log("🔄 Firebase offline, skipping sync");
+                return;
+            }
+            
+            try {
+                console.log("🔄 Syncing with Firebase...");
+                const snapshot = await database.ref('tokens').once('value');
+                const firebaseTokens = snapshot.val() || {};
+                
+                // Merge Firebase data with local
+                Object.assign(tokenDatabase, firebaseTokens);
+                localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
+                
+                console.log(`✅ Sync complete: ${Object.keys(firebaseTokens).length} tokens from Firebase`);
+                updateFirebaseInfo(`✅ Sync complete: ${Object.keys(firebaseTokens).length} tokens`);
+                
+            } catch (error) {
+                console.error("❌ Sync failed:", error);
+                updateFirebaseInfo(`❌ Sync failed: ${error.message}`);
+            }
+        }
+
+        // ==================== MAIN FUNCTIONS ====================
         function renderPackageGrid() {
             const grid = document.getElementById('packageGrid');
             grid.innerHTML = '';
@@ -486,36 +695,47 @@
             }
         }
 
-        // Select Package
         function selectPackage(packageKey) {
-            // Remove selected class from all
             document.querySelectorAll('.package-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
             
-            // Add selected class to clicked
             const selectedBtn = document.querySelector(`[data-package="${packageKey}"]`);
             selectedBtn.classList.add('selected');
-            
             selectedPackage = packageKey;
         }
 
-        // Verify Admin Password
-        function verifyAdmin() {
-            const password = document.getElementById('adminPassword').value;
-            
-            if (password === ADMIN_PASSWORD) {
+        function checkAdminSession() {
+            const isVerified = localStorage.getItem('admin_verified') === 'true';
+            if (isVerified) {
                 document.getElementById('passwordSection').style.display = 'none';
                 document.getElementById('mainPanel').style.display = 'block';
                 updateStats();
                 loadTokenList();
+            }
+        }
+
+        function verifyAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                localStorage.setItem('admin_verified', 'true');
+                document.getElementById('passwordSection').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                updateStats();
+                loadTokenList();
+                
+                // Sync dengan Firebase setelah login
+                setTimeout(() => {
+                    syncWithFirebase();
+                }, 1000);
+                
             } else {
                 alert('❌ Password salah!');
             }
         }
 
-        // Generate Token
-        function generateSelectedToken() {
+        async function generateSelectedToken() {
             if (!selectedPackage) {
                 alert('Pilih paket terlebih dahulu!');
                 return;
@@ -545,47 +765,87 @@
             const createdStr = today.toISOString().split('T')[0];
             const expiryStr = expiryDate.toISOString().split('T')[0];
             
-            // Save to database
-            tokenDatabase[token] = {
+            // Token data
+            const tokenData = {
+                token: token,
                 package: packageData.name,
                 created: createdStr,
                 expiry: expiryStr,
-                email: customerEmail,
-                note: note,
-                status: 'active'
+                email: customerEmail || '',
+                note: note || '',
+                status: 'active',
+                generatedBy: 'admin_panel'
             };
             
-            // Save to localStorage
-            localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
-            
-            // Show result
-            document.getElementById('newTokenCode').textContent = token;
-            document.getElementById('newTokenPackage').textContent = packageData.name;
-            document.getElementById('newTokenExpiry').textContent = expiryStr;
-            document.getElementById('newTokenCreated').textContent = createdStr;
-            document.getElementById('tokenResult').classList.add('show');
-            
-            // Update stats and list
-            updateStats();
-            loadTokenList();
-            
-            // Scroll to result
-            document.getElementById('tokenResult').scrollIntoView({ behavior: 'smooth' });
-            
-            // Reset form
-            document.getElementById('customerEmail').value = '';
-            document.getElementById('tokenNote').value = '';
+            try {
+                // Try to save to Firebase first
+                if (isFirebaseConnected) {
+                    await saveTokenToFirebase(token, tokenData);
+                }
+                
+                // Always save locally
+                tokenDatabase[token] = tokenData;
+                localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
+                
+                // Show result
+                document.getElementById('newTokenCode').textContent = token;
+                document.getElementById('newTokenPackage').textContent = packageData.name;
+                document.getElementById('newTokenExpiry').textContent = expiryStr;
+                document.getElementById('newTokenCreated').textContent = createdStr;
+                document.getElementById('tokenResult').classList.add('show');
+                
+                // Update UI
+                updateStats();
+                loadTokenList();
+                
+                // Scroll to result
+                document.getElementById('tokenResult').scrollIntoView({ behavior: 'smooth' });
+                
+                // Reset form
+                document.getElementById('customerEmail').value = '';
+                document.getElementById('tokenNote').value = '';
+                
+                // Show success message
+                const message = isFirebaseConnected 
+                    ? `✅ Token ${token} berhasil dibuat dan disimpan di server!` 
+                    : `⚠️ Token ${token} dibuat (mode offline).`;
+                alert(message);
+                
+            } catch (error) {
+                // Fallback: save locally only
+                tokenDatabase[token] = tokenData;
+                localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
+                
+                // Show result anyway
+                document.getElementById('newTokenCode').textContent = token;
+                document.getElementById('newTokenPackage').textContent = packageData.name;
+                document.getElementById('newTokenExpiry').textContent = expiryStr;
+                document.getElementById('newTokenCreated').textContent = createdStr;
+                document.getElementById('tokenResult').classList.add('show');
+                
+                updateStats();
+                loadTokenList();
+                
+                alert(`⚠️ Token ${token} dibuat (mode offline karena koneksi gagal).`);
+            }
         }
 
-        // Copy token to clipboard
         function copyTokenToClipboard() {
             const tokenCode = document.getElementById('newTokenCode').textContent;
             navigator.clipboard.writeText(tokenCode).then(() => {
-                alert(`✅ Token ${tokenCode} berhasil disalin ke clipboard!`);
+                alert(`✅ Token ${tokenCode} berhasil disalin!`);
             });
         }
 
-        // Print token
+        function shareTokenViaLink() {
+            const tokenCode = document.getElementById('newTokenCode').textContent;
+            const shareUrl = `${APP_URL}?token=${tokenCode}`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert(`✅ Link berhasil disalin:\n\n${shareUrl}\n\nKirim link ini ke client.`);
+            });
+        }
+
         function printToken() {
             const tokenCode = document.getElementById('newTokenCode').textContent;
             const packageName = document.getElementById('newTokenPackage').textContent;
@@ -597,19 +857,18 @@
                 <head>
                     <title>Token Kalender Jawa</title>
                     <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .token { font-size: 24px; font-weight: bold; margin: 20px 0; }
-                        .info { margin: 10px 0; }
+                        body { font-family: Arial; padding: 20px; }
+                        .token { font-size: 24px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f0f0f0; }
                         @media print { button { display: none; } }
                     </style>
                 </head>
                 <body>
                     <h2>Token Kalender Jawa</h2>
                     <div class="token">${tokenCode}</div>
-                    <div class="info"><strong>Paket:</strong> ${packageName}</div>
-                    <div class="info"><strong>Berlaku hingga:</strong> ${expiry}</div>
-                    <div class="info"><strong>Cara penggunaan:</strong> Masukkan token di aplikasi Kalender Jawa</div>
-                    <br><br>
+                    <p><strong>Paket:</strong> ${packageName}</p>
+                    <p><strong>Berlaku hingga:</strong> ${expiry}</p>
+                    <p><strong>Cara penggunaan:</strong> Masukkan token di aplikasi Kalender Jawa</p>
+                    <br>
                     <button onclick="window.print()">🖨️ Cetak</button>
                     <button onclick="window.close()">✕ Tutup</button>
                 </body>
@@ -618,7 +877,6 @@
             printWindow.document.close();
         }
 
-        // Load token database
         function loadTokenDatabase() {
             const saved = localStorage.getItem('kalender_token_database');
             if (saved) {
@@ -626,7 +884,6 @@
             }
         }
 
-        // Update stats
         function updateStats() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -650,11 +907,15 @@
             document.getElementById('expiredTokens').textContent = expired;
         }
 
-        // Load token list
-        function loadTokenList() {
+        async function loadTokenList() {
             const container = document.getElementById('tokenList');
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            
+            // Sync dengan Firebase terlebih dahulu
+            if (isFirebaseConnected) {
+                await syncWithFirebase();
+            }
             
             if (Object.keys(tokenDatabase).length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #666;">Belum ada token</p>';
@@ -671,11 +932,12 @@
                 const expiryDate = new Date(data.expiry);
                 const isExpired = today > expiryDate;
                 const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                const source = data.generatedBy ? `(${data.generatedBy})` : '';
                 
                 html += `
                     <div class="token-item ${isExpired ? 'expired' : ''}">
                         <div>
-                            <div class="token-code">${token}</div>
+                            <div class="token-code">${token} ${source}</div>
                             <div style="font-size: 0.9em; color: #666;">
                                 ${data.package} • Dibuat: ${data.created}
                                 ${data.email ? `• Email: ${data.email}` : ''}
@@ -687,6 +949,9 @@
                                 ${isExpired ? 'EXPIRED' : `Berlaku hingga: ${data.expiry}`}
                             </div>
                             ${!isExpired ? `<div style="font-size: 0.9em; color: #666;">${daysLeft} hari lagi</div>` : ''}
+                            <button onclick="shareToken('${token}')" style="margin-top:5px; padding:5px 10px; background:#2196F3; color:white; border:none; border-radius:5px; font-size:12px;">
+                                🔗 Share
+                            </button>
                         </div>
                     </div>
                 `;
@@ -695,15 +960,20 @@
             container.innerHTML = html;
         }
 
-        // Refresh token list
+        function shareToken(token) {
+            const shareUrl = `${APP_URL}?token=${token}`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert(`✅ Link berhasil disalin:\n\n${shareUrl}\n\nKirim link ini ke client.`);
+            });
+        }
+
         function refreshTokenList() {
             loadTokenDatabase();
-            updateStats();
             loadTokenList();
         }
 
-        // Revoke token
-        function revokeSelectedToken() {
+        async function revokeSelectedToken() {
             const token = document.getElementById('revokeTokenInput').value.trim();
             
             if (!token) {
@@ -721,51 +991,71 @@
             }
             
             if (confirm(`Hapus token ${token}?\nPaket: ${tokenDatabase[token].package}`)) {
-                delete tokenDatabase[token];
-                localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
-                
-                document.getElementById('revokeResult').innerHTML = `
-                    <div style="color: #4CAF50; background: #e8f5e9; padding: 10px; border-radius: 5px;">
-                        ✅ Token berhasil dihapus
-                    </div>
-                `;
-                
-                document.getElementById('revokeTokenInput').value = '';
-                updateStats();
-                loadTokenList();
-                
-                setTimeout(() => {
-                    document.getElementById('revokeResult').innerHTML = '';
-                }, 3000);
+                try {
+                    // Delete from Firebase
+                    await deleteTokenFromFirebase(token);
+                    
+                    // Delete from local
+                    delete tokenDatabase[token];
+                    localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
+                    
+                    document.getElementById('revokeResult').innerHTML = `
+                        <div style="color: #4CAF50; background: #e8f5e9; padding: 10px; border-radius: 5px;">
+                            ✅ Token berhasil dihapus
+                        </div>
+                    `;
+                    
+                    document.getElementById('revokeTokenInput').value = '';
+                    updateStats();
+                    loadTokenList();
+                    
+                    setTimeout(() => {
+                        document.getElementById('revokeResult').innerHTML = '';
+                    }, 3000);
+                    
+                } catch (error) {
+                    alert('Gagal menghapus token. Coba lagi.');
+                }
             }
         }
 
-        // Clear expired tokens
-        function clearExpiredTokens() {
+        async function clearExpiredTokens() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             let expiredCount = 0;
+            let tokensToDelete = [];
             
             for (const [token, data] of Object.entries(tokenDatabase)) {
                 const expiryDate = new Date(data.expiry);
                 if (today > expiryDate) {
-                    delete tokenDatabase[token];
+                    tokensToDelete.push(token);
                     expiredCount++;
                 }
             }
             
             if (expiredCount > 0) {
-                localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
-                alert(`✅ ${expiredCount} token expired berhasil dihapus`);
-                updateStats();
-                loadTokenList();
+                if (confirm(`Hapus ${expiredCount} token expired?`)) {
+                    // Delete from Firebase
+                    for (const token of tokensToDelete) {
+                        await deleteTokenFromFirebase(token);
+                    }
+                    
+                    // Delete from local
+                    for (const token of tokensToDelete) {
+                        delete tokenDatabase[token];
+                    }
+                    
+                    localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
+                    alert(`✅ ${expiredCount} token expired berhasil dihapus`);
+                    updateStats();
+                    loadTokenList();
+                }
             } else {
                 alert('Tidak ada token expired');
             }
         }
 
-        // Export tokens to JSON
         function exportTokens() {
             const dataStr = JSON.stringify(tokenDatabase, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -778,7 +1068,6 @@
             linkElement.click();
         }
 
-        // Import tokens from JSON
         function importTokens() {
             document.getElementById('importFile').click();
         }
@@ -788,15 +1077,20 @@
             if (!file) return;
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     
-                    // Merge with existing data
+                    // Import to local
                     Object.assign(tokenDatabase, importedData);
-                    
-                    // Save to localStorage
                     localStorage.setItem('kalender_token_database', JSON.stringify(tokenDatabase));
+                    
+                    // Import to Firebase
+                    if (isFirebaseConnected) {
+                        for (const [token, data] of Object.entries(importedData)) {
+                            await saveTokenToFirebase(token, data);
+                        }
+                    }
                     
                     alert(`✅ ${Object.keys(importedData).length} token berhasil diimport!`);
                     updateStats();
@@ -807,7 +1101,6 @@
             };
             reader.readAsText(file);
             
-            // Reset file input
             input.value = '';
         }
     </script>
