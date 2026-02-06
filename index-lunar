@@ -1,122 +1,324 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
- <head>
     <meta charset="UTF-8">
-    <title>Kalender Kitab Mantra</title>
-
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QWSSTDE64P"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-QWSSTDE64P');
-    </script>
-
-    <script src="data-imlek.js"></script>
-    <script src="main.js"></script>
-</head>
-
-
-  <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kalender Jawa & Imlek Abadi</title>
-   <link rel="manifest" href="manifest.json">
- 
+    <meta name="description" content="Kalender Jawa lengkap dengan weton, primbon, dan filosofi Jawa.">
+    <meta name="keywords" content="kalender jawa, weton, primbon, kalender abadi, tanggal jawa, imlek">
+    <meta name="author" content="Tius">
+    
     <meta name="theme-color" content="#D30000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    
+    <title>Kalender Abadi Jawa</title>
     
     <style>
-        :root { --primary: #D30000; --bg: #f4f4f4; --imlek: #cf1322; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 10px; }
-        #mainApp { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { 
+            --primary: #D30000; 
+            --bg: #f4f4f4; 
+            --imlek: #cf1322; 
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+            --radius: 15px;
+        }
         
-        .header-section { text-align: center; margin-bottom: 20px; }
-        .search-box { display: flex; gap: 5px; margin-bottom: 20px; }
-        .search-box input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .search-box button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-        .calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .calendar-nav button { background: none; border: 1px solid #ddd; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .header-day { font-weight: bold; font-size: 11px; padding: 5px 0; color: #666; text-transform: uppercase; }
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 10px;
+            min-height: 100vh;
+        }
         
-        .sunday-red { color: red !important; }
+        #mainApp { 
+            max-width: 500px; 
+            margin: auto; 
+            background: white; 
+            padding: 15px; 
+            border-radius: var(--radius); 
+            box-shadow: var(--shadow);
+        }
         
-        .calendar-day { border: 1px solid #eee; padding: 8px 2px; border-radius: 8px; cursor: pointer; font-size: 14px; min-height: 55px; transition: 0.2s; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .calendar-day:hover { border-color: var(--primary); background: #fff5f5; }
-        .today-highlight { background: #fff0f0; border: 2px solid var(--primary); }
-        .selected-day { background: #fff9c4 !important; border: 2px solid #fbc02d !important; }
+        .header-section { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        
+        .search-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .search-group {
+            flex: 1;
+        }
+        
+        .search-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        .search-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background: #fff;
+        }
+        
+        #searchDateBtn {
+            background: #D30000;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 46px;
+        }
+        
+        .calendar-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+        
+        .calendar-nav button { 
+            background: var(--primary); 
+            color: white;
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 5px; 
+            text-align: center; 
+        }
+        
+        .header-day { 
+            font-weight: bold; 
+            font-size: 11px; 
+            padding: 5px 0; 
+            color: #666; 
+        }
+        
+        .calendar-day { 
+            border: 1px solid #eee; 
+            padding: 8px 2px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            min-height: 55px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
 
-        .date-num { font-weight: bold; font-size: 1.1rem; }
-        .pasaran-text { font-size: 9px; color: #555; margin-top: 2px; }
-        .imlek-num { position: absolute; bottom: 2px; right: 4px; font-size: 9px; color: var(--imlek); font-weight: bold; }
+        #detail { 
+            margin-top: 20px; 
+            border-top: 2px solid #eee; 
+            padding-top: 15px; 
+            display: none; 
+        }
+        
+        /* Token Modal Styles */
+        .token-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .token-modal-content {
+            background: white;
+            width: 90%;
+            max-width: 350px;
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        
+        .token-input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .token-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
 
-        #detail { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
-        .action-buttons { display: flex; gap: 10px; margin-top: 15px; justify-content: center; padding-bottom: 20px; }
-        .btn-wa { background: #25D366; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
-
-        /* Card styles for detail */
-        .card-result { line-height: 1.6; }
+        .token-wa-btn {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
+<div id="tokenModal" class="token-modal">
+    <div class="token-modal-content">
+        <h2>🔑 Akses Token</h2>
+        <p style="font-size: 14px; color: #666;">Masukkan token untuk akses lengkap:</p>
+        <input type="text" id="tokenInput" class="token-input" placeholder="Masukkan kode token...">
+        <button class="token-btn" onclick="validateToken()">Aktifkan Token</button>
+        
+        <p style="margin: 15px 0 5px; font-size: 12px;">Belum punya token?</p>
+        <a href="https://wa.me/6285117021168?text=Halo%20admin,%20saya%20ingin%20membeli%20token%20Kalender%20Jawa" 
+           class="token-wa-btn" target="_blank">
+           💬 Beli Token via WhatsApp
+        </a>
+        
+        <button onclick="closeTokenModal()" style="background:none; border:none; color:#aaa; margin-top:10px; cursor:pointer;">
+            Nanti Saja
+        </button>
+    </div>
+</div>
+
 <div id="mainApp">
     <div class="header-section">
-        <h1 style="margin:0; font-size: 22px; color: var(--primary);">Kalender Abadi</h1>
-        <p style="margin:5px 0; font-size: 13px; color: #888;">Jawa • Masehi • Imlek</p>
+        <h1 style="margin:0; font-size: 22px; color: var(--primary);">📅 Kalender Abadi Jawa</h1>
+        <p id="appStatus" style="margin:5px 0; font-size: 11px; color: #25D366;"></p>
     </div>
 
-    <div class="search-box">
-        <input type="date" id="dateInput">
-        <button onclick="searchWeton()">Cari</button>
+    <div class="search-section">
+        <h3 style="color: #D30000; margin: 0 0 15px 0; font-size: 18px;">🔍 Cari Tanggal</h3>
+        <div class="search-form">
+            <div class="search-group">
+                <input type="date" id="dateSearchInput">
+            </div>
+            <button id="searchDateBtn">Cari</button>
+        </div>
     </div>
 
     <div class="calendar-nav">
         <button id="prevMonth">◀</button>
-        <h3 id="monthYearNav">Januari 2026</h3>
+        <h3 id="monthYearNav" style="margin: 0;">Januari 2026</h3>
         <button id="nextMonth">▶</button>
     </div>
-
+    
     <div id="calendar" class="calendar-grid"></div>
 
-    <div id="detail">
-        <div id="printableArea">
-            </div>
+    <div id="detail"></div>
+  
+    <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 10px;">
+        <p><a href="panduan.html" style="color: #28a745; text-decoration: none; font-weight: bold;">📖 Panduan Cari Hari Baik</a></p>
+        <p>🔄 <strong>by Tius</strong> - © 2026</p>
     </div>
-
-    <div class="action-buttons">
-        <button class="btn-wa" onclick="shareWhatsApp()">📱 Bagikan ke WhatsApp</button>
-    </div>
-
-    <footer style="text-align:center; font-size:11px; color:#aaa; margin-top:20px; border-top:1px solid #eee; padding-top:10px;">
-        &copy; 2026 Kalender Multi-Budaya • By Tius
-    </footer>
 </div>
 
-<script src="data-srijati.js"></script>
-<script src="data-wuku.js"></script>
-<script src="data-mangsa.js"></script>
-<script src="data-hari.js"></script>
-<script src="data-imlek.js"></script>
-<script src="data-neptu.js"></script>
-<script src="data-astrologi.js"></script>
-
 <script src="main.js"></script>
+<script src="ramalan-shio.js"></script>
 
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('Service Worker terdaftar!', reg))
-        .catch(err => console.log('Pendaftaran gagal:', err));
-    });
-  }
-</script>
+// --- LOGIKA TOKEN REVISI ---
 
+function showTokenModal() {
+    document.getElementById('tokenModal').style.display = 'flex';
+}
+
+function closeTokenModal() {
+    document.getElementById('tokenModal').style.display = 'none';
+}
+
+function validateToken() {
+    const tokenInput = document.getElementById('tokenInput');
+    const inputCode = tokenInput.value.trim().toUpperCase();
+    
+    // 1. Ambil database dari admin.html
+    const tokenDb = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+    
+    if (!inputCode) {
+        alert('⚠️ Masukkan token terlebih dahulu');
+        return;
+    }
+    
+    // 2. Periksa apakah kode ada di database admin
+    if (tokenDb[inputCode]) {
+        const data = tokenDb[inputCode];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const expiryDate = new Date(data.expiry);
+        
+        // 3. Periksa masa berlaku
+        if (today <= expiryDate) {
+            // Simpan status aktif untuk dibaca main.js
+            localStorage.setItem('kalender_token_tius', inputCode);
+            alert(`✅ Berhasil! Token aktif.\nPaket: ${data.package}\nBerlaku s/d: ${data.expiry}`);
+            closeTokenModal();
+            location.reload(); 
+        } else {
+            alert('❌ Token ini sudah kadaluwarsa.');
+        }
+    } else {
+        alert('❌ Token tidak valid! Pastikan Anda menyalin kode dengan benar dari admin.');
+    }
+}
+
+window.addEventListener('load', function() {
+    document.getElementById('appStatus').textContent = '✅ Aplikasi Siap';
+    
+    // Default date setup
+    const today = new Date();
+    const searchInput = document.getElementById('dateSearchInput');
+    if (searchInput) searchInput.value = today.toISOString().split('T')[0];
+    
+    // Cek apakah user sudah punya token valid
+    const savedToken = localStorage.getItem('kalender_token_tius');
+    if (savedToken) {
+        const tokenDb = JSON.parse(localStorage.getItem('kalender_token_database') || '{}');
+        if (!tokenDb[savedToken]) {
+            // Jika token di main.js ada tapi di database admin sudah dihapus
+            localStorage.removeItem('kalender_token_tius');
+        }
+    }
+});
+</script>
 
 </body>
 </html>
